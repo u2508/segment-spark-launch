@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from 'src/integrations/supabase/client'; // adjust the path based on your project
+import { supabase } from '@/integrations/supabase/client'; // adjust the path based on your project
 
 interface Report {
   id: string;
