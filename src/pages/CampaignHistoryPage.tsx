@@ -152,16 +152,16 @@ const CampaignHistoryPage: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 mr-2">
+            <Tabs defaultValue={viewMode} onValueChange={setViewMode}>
               <TabsList className="grid grid-cols-2 h-9">
-                <TabsTrigger value="grid" onClick={() => setViewMode('grid')} className="px-3 data-[state=active]:bg-muted">
+                <TabsTrigger value="grid" className="px-3 data-[state=active]:bg-muted">
                   <List className="h-4 w-4" />
                 </TabsTrigger>
-                <TabsTrigger value="table" onClick={() => setViewMode('table')} className="px-3 data-[state=active]:bg-muted">
+                <TabsTrigger value="table" className="px-3 data-[state=active]:bg-muted">
                   <TableIcon className="h-4 w-4" />
                 </TabsTrigger>
               </TabsList>
-            </div>
+            </Tabs>
             
             <Filter className="h-4 w-4" />
             <Select
