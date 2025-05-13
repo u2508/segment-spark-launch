@@ -21,6 +21,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    outDir: 'dist', // Standard output directory for Vite
+    outDir: 'public', // This configures the output directory to 'public'
   },
 }));
