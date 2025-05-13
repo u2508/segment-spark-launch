@@ -9,6 +9,179 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audience: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          tag: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          tag?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          tag?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      campaign_reports: {
+        Row: {
+          campaign_name: string | null
+          created_at: string | null
+          failed_count: number | null
+          id: string
+          sent_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_name?: string | null
+          created_at?: string | null
+          failed_count?: number | null
+          id?: string
+          sent_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_name?: string | null
+          created_at?: string | null
+          failed_count?: number | null
+          id?: string
+          sent_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          audience: number
+          createdat: string
+          delivered: number
+          description: string | null
+          id: string
+          name: string
+          opened: number
+          rules: Json | null
+          status: string
+        }
+        Insert: {
+          audience: number
+          createdat?: string
+          delivered?: number
+          description?: string | null
+          id?: string
+          name: string
+          opened?: number
+          rules?: Json | null
+          status: string
+        }
+        Update: {
+          audience?: number
+          createdat?: string
+          delivered?: number
+          description?: string | null
+          id?: string
+          name?: string
+          opened?: number
+          rules?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          created_at: string
+          email: string
+          firstname: string
+          id: string
+          lastname: string | null
+          lastpurchasedate: string | null
+          location: string | null
+          phone: string | null
+          tags: string[] | null
+          totalspent: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          firstname: string
+          id?: string
+          lastname?: string | null
+          lastpurchasedate?: string | null
+          location?: string | null
+          phone?: string | null
+          tags?: string[] | null
+          totalspent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          firstname?: string
+          id?: string
+          lastname?: string | null
+          lastpurchasedate?: string | null
+          location?: string | null
+          phone?: string | null
+          tags?: string[] | null
+          totalspent?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customeremail: string
+          id: string
+          orderdate: string
+          products: Json
+          status: string
+          totalamount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customeremail: string
+          id?: string
+          orderdate?: string
+          products: Json
+          status: string
+          totalamount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customeremail?: string
+          id?: string
+          orderdate?: string
+          products?: Json
+          status?: string
+          totalamount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customeremail_fkey"
+            columns: ["customeremail"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["email"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -38,7 +211,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_total_spent: {
+        Args: { p_email: string; p_amount: number }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
