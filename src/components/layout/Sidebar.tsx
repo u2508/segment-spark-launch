@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -8,6 +9,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  FileCode,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -28,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
     { name: 'Campaigns', path: '/campaigns', icon: MessageSquare },
     { name: 'Audience', path: '/audience', icon: Users },
     { name: 'Reports', path: '/reports', icon: FileText },
+    { name: 'API Docs', path: '/api-docs', icon: FileCode },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
@@ -101,4 +105,3 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
 };
 
 export default Sidebar;
-
