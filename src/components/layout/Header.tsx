@@ -21,14 +21,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
       <h1 className="text-2xl font-bold">{title}</h1>
       
       <div className="flex items-center gap-4">
-        <div className="relative max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Search..." 
-            className="pl-8 w-[200px] md:w-[300px]" 
-          />
-        </div>
+        
         
         <Link to="/campaigns/new">
           <Button className="hidden md:flex">
