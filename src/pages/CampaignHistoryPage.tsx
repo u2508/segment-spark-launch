@@ -1,5 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import CampaignCard from '@/components/campaigns/CampaignCard';
 import CampaignHistoryTable from '@/components/campaigns/CampaignHistoryTable';
@@ -14,82 +16,18 @@ import {
   TabsTrigger
 } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
-// Mock campaign data
-const campaignData = [
-  {
-    id: '1',
-    name: 'Welcome Series',
-    status: 'active' as const,
-    audience: 3420,
-    delivered: 3245,
-    opened: 1842,
-    createdAt: '2023-05-12T10:30:00Z',
-  },
-  {
-    id: '2',
-    name: 'Loyal Customer Rewards',
-    status: 'scheduled' as const,
-    audience: 1250,
-    delivered: 0,
-    opened: 0,
-    createdAt: '2023-05-15T14:45:00Z',
-  },
-  {
-    id: '3',
-    name: 'Product Launch Announcement',
-    status: 'draft' as const,
-    audience: 8700,
-    delivered: 0,
-    opened: 0,
-    createdAt: '2023-05-10T09:15:00Z',
-  },
-  {
-    id: '4',
-    name: 'Re-engagement Campaign',
-    status: 'completed' as const,
-    audience: 5280,
-    delivered: 5120,
-    opened: 2245,
-    createdAt: '2023-05-05T11:20:00Z',
-  },
-  {
-    id: '5',
-    name: 'Flash Sale Notification',
-    status: 'completed' as const,
-    audience: 12480,
-    delivered: 11950,
-    opened: 8340,
-    createdAt: '2023-04-28T08:15:00Z',
-  },
-  {
-    id: '6',
-    name: 'Customer Feedback Survey',
-    status: 'failed' as const,
-    audience: 2800,
-    delivered: 1954,
-    opened: 876,
-    createdAt: '2023-04-20T13:45:00Z',
-  },
-  {
-    id: '7',
-    name: 'New Feature Announcement',
-    status: 'active' as const,
-    audience: 7650,
-    delivered: 7320,
-    opened: 3890,
-    createdAt: '2023-05-02T09:30:00Z',
-  },
-  {
-    id: '8',
-    name: 'Membership Renewal',
-    status: 'draft' as const,
-    audience: 1840,
-    delivered: 0,
-    opened: 0,
-    createdAt: '2023-05-14T16:20:00Z',
-  },
-];
+// Define campaign data structure
+interface Campaign {
+  id: string;
+  name: string;
+  status: 'active' | 'scheduled' | 'draft' | 'completed' | 'failed';
+  audience: number;
+  delivered: number;
+  opened: number;
+  createdAt: string;
+}
 
 const CampaignHistoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -98,7 +36,52 @@ const CampaignHistoryPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('date-desc');
   const [viewMode, setViewMode] = useState('grid');
   
-  const filteredCampaigns = campaignData.filter(campaign => {
+  // Fetch campaigns from Supabase
+  const fetchCampaigns = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('createdat', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+
+      // Transform data to match our Campaign interface
+      const transformedCampaigns: Campaign[] = (data || []).map(campaign => ({
+        id: campaign.id,
+        name: campaign.name,
+        status: campaign.status as 'active' | 'scheduled' | 'draft' | 'completed' | 'failed',
+        audience: campaign.audience,
+        delivered: campaign.delivered,
+        opened: campaign.opened,
+        createdAt: campaign.createdat
+      }));
+      
+      return transformedCampaigns;
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      toast({
+        title: 'Error fetching campaigns',
+        description: 'There was a problem loading your campaigns.',
+        variant: 'destructive'
+      });
+      return [];
+    }
+  };
+  
+  const { data: campaigns = [], isLoading, refetch } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: fetchCampaigns
+  });
+
+  // Refresh data when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+  
+  const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -125,7 +108,7 @@ const CampaignHistoryPage: React.FC = () => {
   });
 
   const handleViewDetails = (campaignId: string) => {
-    // In a real app, navigate to campaign detail page
+    // Navigate to campaign detail page (to be implemented)
     console.log(`View details for campaign ${campaignId}`);
     // navigate(`/campaigns/${campaignId}`);
   };
@@ -200,7 +183,11 @@ const CampaignHistoryPage: React.FC = () => {
           </div>
         </div>
         
-        {viewMode === 'grid' ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
             {sortedCampaigns.length > 0 ? (
               sortedCampaigns.map(campaign => (
@@ -209,7 +196,7 @@ const CampaignHistoryPage: React.FC = () => {
             ) : (
               <div className="col-span-full text-center py-12">
                 <h3 className="text-lg font-medium">No campaigns found</h3>
-                <p className="text-muted-foreground mt-1">Try adjusting your filters or search term</p>
+                <p className="text-muted-foreground mt-1">Try adjusting your filters or create a new campaign</p>
               </div>
             )}
           </div>
@@ -222,7 +209,7 @@ const CampaignHistoryPage: React.FC = () => {
           ) : (
             <div className="text-center py-12 border rounded-md">
               <h3 className="text-lg font-medium">No campaigns found</h3>
-              <p className="text-muted-foreground mt-1">Try adjusting your filters or search term</p>
+              <p className="text-muted-foreground mt-1">Try adjusting your filters or create a new campaign</p>
             </div>
           )
         )}

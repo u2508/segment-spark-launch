@@ -5,6 +5,7 @@ import SegmentBuilder from '@/components/campaigns/SegmentBuilder';
 import MessageGenerator from '@/components/campaigns/MessageGenerator';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Card, 
   CardContent, 
@@ -52,6 +53,8 @@ const CreateCampaignPage: React.FC = () => {
     description: '',
     subject: '',
     message: '',
+    scheduledDate: '',
+    scheduledTime: '',
     isValid: false,
   });
 
@@ -63,7 +66,7 @@ const CreateCampaignPage: React.FC = () => {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!campaignData.name.trim()) {
       toast({
         title: "Campaign name required",
@@ -75,27 +78,85 @@ const CreateCampaignPage: React.FC = () => {
 
     setIsSubmitting(true);
     
-    // Simulate API call for campaign delivery
-    setTimeout(() => {
-      // Simulate 90% success rate
-      const isSuccess = Math.random() <= 0.9;
+    try {
+      // Get the authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (isSuccess) {
+      if (!user) {
         toast({
-          title: "Campaign created and sent!",
-          description: `Your campaign has been successfully created and sent to ${segmentData.audienceSize?.toLocaleString() || 'your audience'}.`,
-        });
-      } else {
-        toast({
-          title: "Campaign created with errors",
-          description: "Your campaign was created but some messages may not have been delivered. Check logs for details.",
+          title: "Authentication required",
+          description: "Please log in to create campaigns.",
           variant: "destructive",
         });
+        setIsSubmitting(false);
+        return;
       }
+
+      // Store campaign in database
+      const { data: campaign, error: campaignError } = await supabase
+        .from('campaigns')
+        .insert([
+          {
+            name: campaignData.name,
+            description: campaignData.description,
+            status: 'active',
+            audience: segmentData.audienceSize || 0,
+            delivered: 0,
+            opened: 0,
+            rules: segmentData.ruleGroups
+          }
+        ])
+        .select()
+        .single();
+
+      if (campaignError) {
+        throw new Error(campaignError.message);
+      }
+
+      // Simulate message delivery (90% success rate in this simulation)
+      const audienceSize = segmentData.audienceSize || 0;
+      const failureRate = 0.1; // 10% failure rate
+      const failedCount = Math.floor(audienceSize * failureRate);
+      const sentCount = audienceSize - failedCount;
       
-      setIsSubmitting(false);
+      // Create a campaign report
+      const { error: reportError } = await supabase
+        .from('campaign_reports')
+        .insert([
+          {
+            user_id: user.id,
+            campaign_name: campaignData.name,
+            sent_count: sentCount,
+            failed_count: failedCount
+          }
+        ]);
+
+      if (reportError) {
+        console.error("Error creating campaign report:", reportError);
+      }
+
+      // Update the delivered count in the campaigns table
+      await supabase
+        .from('campaigns')
+        .update({ delivered: sentCount })
+        .eq('id', campaign.id);
+
+      toast({
+        title: "Campaign created and sent!",
+        description: `Your campaign has been successfully created and sent to ${sentCount.toLocaleString()} recipients.`,
+      });
+
       navigate('/campaigns');
-    }, 2000);
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast({
+        title: "Campaign creation failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSegmentChange = (ruleGroups: RuleGroup[], audienceSize: number | null) => {
@@ -160,10 +221,14 @@ const CreateCampaignPage: React.FC = () => {
                     <Input 
                       type="date"
                       className="max-w-[200px]"
+                      value={campaignData.scheduledDate}
+                      onChange={(e) => updateCampaignData('scheduledDate', e.target.value)}
                     />
                     <Input 
                       type="time"
                       className="max-w-[150px]"
+                      value={campaignData.scheduledTime}
+                      onChange={(e) => updateCampaignData('scheduledTime', e.target.value)}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">Leave blank to send immediately after creation</p>
