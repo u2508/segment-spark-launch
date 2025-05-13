@@ -212,7 +212,7 @@ export type Database = {
     }
     Functions: {
       increment_total_spent: {
-        Args: { p_email: string; p_amount: number }
+        Args: Record<PropertyKey, never> | { p_email: string; p_amount: number }
         Returns: number
       }
     }
