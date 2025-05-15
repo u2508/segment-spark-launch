@@ -74,7 +74,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 The app will be live at: 
 
-**URL**: https://lovable.dev/projects/267dd028-42f1-4ecc-b388-73ed1341c406
+**URL**: https://xeno-sde-project.lovable.app/
 
 ---
 
