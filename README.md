@@ -74,7 +74,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 The app will be live at: 
 
-**URL**: https://xeno-sde-project.lovable.app/
+**URL**: https://xeno-intern-dev.vercel.app/
 
 ---
 
