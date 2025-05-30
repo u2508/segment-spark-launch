@@ -92,20 +92,19 @@ const CreateCampaignPage: React.FC = () => {
         return;
       }
 
-      // Store campaign in database
+      // Store campaign in database with proper typing
       const { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
-        .insert([
-          {
-            name: campaignData.name,
-            description: campaignData.description,
-            status: 'active',
-            audience: segmentData.audienceSize || 0,
-            delivered: 0,
-            opened: 0,
-            rules: segmentData.ruleGroups
-          }
-        ])
+        .insert({
+          user_id: user.id,
+          name: campaignData.name,
+          description: campaignData.description,
+          status: 'active',
+          audience: segmentData.audienceSize || 0,
+          delivered: 0,
+          opened: 0,
+          rules: segmentData.ruleGroups as any // Cast to Json type
+        })
         .select()
         .single();
 
@@ -122,14 +121,12 @@ const CreateCampaignPage: React.FC = () => {
       // Create a campaign report
       const { error: reportError } = await supabase
         .from('campaign_reports')
-        .insert([
-          {
-            user_id: user.id,
-            campaign_name: campaignData.name,
-            sent_count: sentCount,
-            failed_count: failedCount
-          }
-        ]);
+        .insert({
+          user_id: user.id,
+          campaign_name: campaignData.name,
+          sent_count: sentCount,
+          failed_count: failedCount
+        });
 
       if (reportError) {
         console.error("Error creating campaign report:", reportError);

@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Form validation schemas
 const signInSchema = z.object({
@@ -27,7 +29,7 @@ const signUpSchema = z.object({
 });
 
 const AuthPage: React.FC = () => {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
   // Sign In form
@@ -54,6 +56,8 @@ const AuthPage: React.FC = () => {
     setIsLoading(true);
     try {
       await signIn(values.email, values.password);
+    } catch (error) {
+      console.error('Sign in error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -63,16 +67,40 @@ const AuthPage: React.FC = () => {
     setIsLoading(true);
     try {
       await signUp(values.email, values.password);
+    } catch (error) {
+      console.error('Sign up error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    signInWithGoogle().finally(() => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      toast({
+        title: "Sign in failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    });
+    }
   };
 
   return (
@@ -275,7 +303,7 @@ const AuthPage: React.FC = () => {
                       <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t"></span>
                       </div>
-                      <div className="relative flex justify-center text-xs uppercase">
+                      <div className="relative flex justify center text-xs uppercase">
                         <span className="bg-background px-2 text-muted-foreground">
                           Or continue with
                         </span>
